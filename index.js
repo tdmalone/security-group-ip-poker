@@ -54,7 +54,7 @@ exports.handler = ( event, context, callback ) => {
   ec2.authorizeSecurityGroupIngress( params, ( error, response ) => {
 
     if ( error ) {
-      return lambdaProxyResponse({ error: error }, null, callback );
+      return lambdaProxyResponse( JSON.stringify({ error: error }), null, callback );
     }
 
     const message = response.length ? response : {
@@ -63,7 +63,7 @@ exports.handler = ( event, context, callback ) => {
 
     // If we're not running tests, we're good to go!
     if ( ipAddress !== testIpAddress ) {
-      return lambdaProxyResponse( null, message, callback );
+      return lambdaProxyResponse( null, JSON.stringify( message ), callback );
     }
 
     // If running tests, we also need to remove the IP afterwards, otherwise any subsequent tests
@@ -71,7 +71,7 @@ exports.handler = ( event, context, callback ) => {
     ec2.revokeSecurityGroupIngress( params, ( error, response ) => {
 
       if ( error ) {
-        return lambdaProxyResponse({ error: error }, null, callback );
+        return lambdaProxyResponse( JSON.stringify({ error: error }), null, callback );
       }
 
       message.message = (
@@ -80,7 +80,7 @@ exports.handler = ( event, context, callback ) => {
           message.message + ' Test address has been removed.'
       );
 
-      return lambdaProxyResponse( null, message, callback );
+      return lambdaProxyResponse( null, JSON.stringify( message ), callback );
 
     }); // RevokeSecurityGroupIngress.
   }); // AuthorizeSecurityGroupIngress.
