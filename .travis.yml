@@ -39,7 +39,7 @@ script:
 
 before_deploy:
   - yarn remove aws-sdk
-  - rm -rf coverage node_modules tests .*rc.js
+  - rm -rf coverage node_modules .*rc.js
   - yarn --prod
 
 deploy:
