@@ -1,0 +1,30 @@
+{
+  "name": "security-group-ip-poker",
+  "version": "0.0.0",
+  "description": "A simple Lambda function to 'poke' a hole in an AWS security group for temporary access from an authorised IP.",
+  "homepage": "https://github.com/tdmalone/security-group-ip-poker#readme",
+  "repository": "git+https://github.com/tdmalone/security-group-ip-poker.git",
+  "main": "index.js",
+  "author": "Tim Malone <tdmalone@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "execute": "docker run --rm -v $PWD:/var/task lambci/lambda:nodejs6.10 index.handler {}",
+    "lint": "DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
+    "fix": "yarn lint --fix",
+    "test": "yarn execute && jest --verbose --coverage"
+  },
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.js"
+    ]
+  },
+  "dependencies": {
+    "aws-sdk": "^2.170.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.8.0",
+    "eslint-config-tdmalone": "^0.0.1",
+    "jest": "^21.2.1",
+    "jest-tobetype": "^1.1.0"
+  }
+}
