@@ -74,7 +74,11 @@ exports.handler = ( event, context, callback ) => {
         return lambdaProxyResponse({ error: error }, null, callback );
       }
 
-      message.message = response.length ? response : message.message + ' Test address has been removed.';
+      message.message = (
+        response.length ?
+          response :
+          message.message + ' Test address has been removed.'
+      );
 
       return lambdaProxyResponse( null, message, callback );
 
