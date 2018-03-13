@@ -80,7 +80,7 @@ exports.handler = ( event, context, callback ) => {
           message.message + ' Test address has been removed.'
       );
 
-      return lambdaProxyResponse( null, JSON.stringify( message ), callback );
+      return lambdaProxyResponse( null, message, callback );
 
     }); // RevokeSecurityGroupIngress.
   }); // AuthorizeSecurityGroupIngress.
