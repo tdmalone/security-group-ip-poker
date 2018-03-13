@@ -4,7 +4,7 @@ A simple Lambda function to 'poke' a hole in an AWS security group for temporary
 
 ## Installation
 
-Coming soon.
+Steps are coming soon. They basically involve creating an AWS Lambda function and an API Gateway endpoint, as well as the neccesary security rules.
 
 ## License
 
