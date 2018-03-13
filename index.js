@@ -38,18 +38,18 @@ exports.handler = ( event, context, callback ) => {
 
     params.IpPermissions.push({
       IpProtocol: 'tcp',
-      FromPort: port,
-      ToPort: port,
-      IpRanges: [{
-        'CidrIp': ipAddress + '/32',
+      FromPort:   port,
+      ToPort:     port,
+      IpRanges:   [ {
+        'CidrIp':      ipAddress + '/32',
         'Description': 'securityGroupIpPoker ' + date
-      }]
+      } ]
     });
 
   });
 
   ec2.authorizeSecurityGroupIngress( params, ( error, response ) => {
-    if ( error ) return lambdaProxyResponse( { error: error }, null, callback );
+    if ( error ) return lambdaProxyResponse({ error: error }, null, callback );
     const successMessage = 'Success: ' + ipAddress + ' has been added to the specified ports.';
     return lambdaProxyResponse( null, response.length ? response : successMessage, callback );
   });
