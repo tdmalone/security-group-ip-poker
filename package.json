@@ -1,0 +1,32 @@
+{
+  "name": "security-group-ip-poker",
+  "version": "0.0.0",
+  "description": "A simple Lambda function to 'poke' a hole in an AWS security group for temporary access from an authorised IP.",
+  "homepage": "https://github.com/tdmalone/security-group-ip-poker#readme",
+  "repository": "git+https://github.com/tdmalone/security-group-ip-poker.git",
+  "main": "index.js",
+  "author": "Tim Malone <tdmalone@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "execute": "docker run --rm -e CI -e LOCAL_TIMEZONE -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_SECURITY_GROUP_ID -e AWS_SECURITY_GROUP_PORTS -v $PWD:/var/task lambci/lambda:nodejs6.10 index.handler \"$(cat tests/fixtures/api-gateway-request.json)\"",
+    "lint": "DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
+    "fix": "yarn lint --fix",
+    "test": "yarn execute && jest --verbose --coverage"
+  },
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.js"
+    ]
+  },
+  "dependencies": {
+    "@tdmalone/lambda-proxy-response": "^0.0.2",
+    "aws-sdk": "^2.170.0",
+    "moment-timezone": "^0.5.14"
+  },
+  "devDependencies": {
+    "eslint": "^4.8.0",
+    "eslint-config-tdmalone": "^0.0.1",
+    "jest": "^21.2.1",
+    "jest-tobetype": "^1.1.0"
+  }
+}

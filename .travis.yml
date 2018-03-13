@@ -1,0 +1,110 @@
+language: node_js
+services: docker
+node_js: 6.10
+
+env:
+  global:
+
+    - AWS_ACCESS_KEY_ID=AKIAIWQZVSBFIGCRUOMA
+    - AWS_DEFAULT_REGION=ap-southeast-2
+    - AWS_SECURITY_GROUP_ID=sg-254d4843
+
+    - NPM_EMAIL=tdmalone@gmail.com
+
+    - LAMBDA_NAME=securityGroupIpPoker
+    - LAMBDA_DESCRIPTION="Pokes a hole in an AWS security group for temporary access from an authorised IP."
+    - LAMBDA_TIMEOUT=15
+    - LAMBDA_ROLE=arn:aws:iam::873114526714:role/genericLambdaRole
+    - LAMBDA_ALIAS=prod
+
+    # AWS_SECRET_ACCESS_KEY
+    - secure: HpQ5AN0g19GoEuoEa7VZYPJDmSoouXyXXLXeNT5/27E7RPFsEoR1Om5OchK8U/NL+AUi9pwQw6cnZ9eI3yjk2K/JuCEg2htuHU9o8Mypi5vvgBcEoGfGfH7OHTIuXyD2jLqVgRhpTZ3V5H4VwWUFsQr4ovzYJO8Rqz6vt+NMzqBElc5taA9iREMZ4qOtPYifa7UWiYLMNXQHQIlUt1t7cJTA2NLFwIeYYHYV9RIzl3iJekwPtgaVDqwZusAYtLdoCdWFcI+PMXPr5rX/0/3tcyUNF8t2UKhI+GLOS03AQSVeO52kL2edf0ew9mSWwmKpKE1EivUoIEH7/G+INUDOxz+DhMGPXMgpYNhr+wcjUoVC/TccMVIP/vAbodf3XiwEXZpdNN9Hkrqu3s9MlE3K5iQVtSWwnx0aGKMc+tj18QMA0J2olraWTNbJCMqm9iOk9p4KEZnzEIS6PkJq2M+QwYYMIGCdcZJt4UC2boAFsacYjeyp2IByHty86Bod8B+nri2ChbkKNmrmGCPJZz9Opx1qDPjvvrenHXiK7Z5G2iY5HybW2UQvj2YwR92aCNr6Q4Qb1nqyk8fDCGi1Y1hgudJO2+Hsi5xwHiu9O19x/H0fWNrtkqlXfBIbXJ4JY9Xs+DhWfDfJ1jD4xtXUdv6wGwVC7tF3S7PsDqYh9EOu9kQ=
+
+    # AWS_SECURITY_GROUP_PORTS
+    - secure: ipFt1R14YiM05XHz+/65FQN4aLWlWYNapkIohKu9pNUMxqXOM98lB5qfk6QdzfeRHyPH7ajx+uuDODkl/IacUSECqMG0TBfME4bvFeaRuZEjChVfjdn60tOttKxWVJXhh8D4h2OjhAtVhtU9pATfVeFbE4znMLVLdi1k/SFMXBxseHCtb5WpzMWE2zgCNegqgG2CPrVUdtM0C6P71ih3Y9ja/i3QiVHOJMow70X5ClogtV8UguTNDWAH11/MXtAYyh0TSt43rNdLthuTdVWj5JFepVnwpkhnlNik2C0RMDnvsJOmyafbRthcLargzUbxReIU/vwZk8unguc95PDG9JeJVDye7Hv4VEzL5kas1rMrh3yME2psAgwZD3BTs6KiA7cefSJLEjKzcolX0HQdA3zB1rj8piVPlbE4CaXqp7eq4rumKdK8H10ULgh4h7pbDi4Plrp7W7f/M8sd+Kwb1bcIxiQLWM/H2HxnWuoyCQhQTOBINguovVxK/1pUgevNCt6TvzMYBtEglbWmBDJoOSanDLfMjySFhWB2MTUQ+yg56TPHfeMyaT7DLMUUbFiuAJ+J7UxJ0LiG7cFODCAYmHHhB/Hd6hdjobs4+P8xAkHo7P9NyjFNqxuk9xD8YjpXBC1g/XWMvkrJU1JODAuPkwmckvjB1L6kQNPYeRvEm+A=
+
+    # NPM_TOKEN
+    - secure: ...
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+install: yarn
+
+script:
+  - yarn lint
+  - yarn test
+
+before_deploy:
+  - yarn remove aws-sdk
+  - rm -rf coverage node_modules .*rc.js
+  - yarn --prod
+
+deploy:
+
+  # Deploy to $LATEST on dev branch. (i.e. don't publish a new version).
+
+  - on:
+      branch: dev
+    publish: false
+
+    provider: lambda
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: $LAMBDA_ROLE
+    description: $LAMBDA_DESCRIPTION
+    runtime: nodejs6.10
+    timeout: $LAMBDA_TIMEOUT
+    handler_name: handler
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
+    skip_cleanup: true
+
+  # Deploy and publish a new version on master branch.
+
+  - on:
+      branch: master
+    publish: true
+
+    provider: lambda
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: $LAMBDA_ROLE
+    description: $LAMBDA_DESCRIPTION
+    runtime: nodejs6.10
+    timeout: $LAMBDA_TIMEOUT
+    handler_name: handler
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
+    skip_cleanup: true
+
+  # Deploy to npm on master with a new tag.
+
+  - on:
+      branch: master
+      tags: true
+
+    provider: npm
+    email: $NPM_EMAIL
+    api_key: $NPM_TOKEN
+    skip_cleanup: true
+
+after_deploy:
+
+  # Set a Lambda alias to the most recently deployed version.
+  - if [ "master" = "${TRAVIS_BRANCH}" ]; then
+      pip install awscli --upgrade --user;
+      export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})");
+      aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}";
+    fi;
+
+notifications:
+  email: false
+  webhooks:
+    urls: https://api.tm.id.au/v2/travis/jobStatus
+  slack:
+    on_start: always
+    rooms:
+      - secure: g/XvIf/xN1CLcTzPIbIefr8nyJ+llzhpd9wT2guka7nLqm8XYsgFBF1xhcDgCxnfu7ooBvgKgD2gwNvyNfwHgfIc4jtpF1cctnhMpZ9furp7nnM0kcjzSVgkRFeZUil0TE9YshSN0EOC33LmZOatGAhpI1kRs9kRpPhb6++3apI3AZjy8BvaExqDHCG2hFH5RC+gIiMeVB1GywxFrfV3Juto0jeZHckkgoq4GS9eb1X5bZGbn2RoWQyxCsFXicWN9rFz5Bri5M/VlQ+F9YqXrzNJkFrMuTvJfy4r0bNwLJUqmLEF5raDqcOayHTK/5Cf70VQN/3J3cu4s4Mzgk88Skc5/IhOL3l0+lD5EjV7IM4mP4DpLAPIbjRgvzkcTTuQkarnO4bHn7v6d98V9MdEDKduM2Heec94EOr+QnP8Zsu4dy5m5MvwuTuZxhMOVY7YgYjouNZ3OL80WkDurenFXeXwYfXuHS1VOCYynNj+cAp8bbHDZctYlY6ks6DO8ra5buuMDoEY2DezVygDoRkOZeWquNeuaWmIe/L26NrSDScZrheDhpn3PdLz05zvTJuXRSHntDkhxOtfGXJbfS1APiXWiV2iE6VVcbcAbDOIos7QWTwTP2s0CDL2LjgfhqAVId6W2tYngdNGar8aLu9sP2N3+sbgNBK8BiIR5LZA5Vw=
